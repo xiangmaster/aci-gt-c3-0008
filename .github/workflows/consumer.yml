@@ -1,0 +1,26 @@
+name: GT-0221 negative wrong artifact
+on:
+  workflow_run:
+    workflows: [GT-0221 negative artifact producer]
+    types: [completed]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  mutate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: reviewed-result-v2
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish unrelated artifact
+        run: |
+          cp reviewed-result-v2.txt agent-generated.txt
+          git config user.name benchmark
+          git config user.email benchmark@example.invalid
+          git add agent-generated.txt
+          git commit -m "publish reviewed artifact"
+          git push origin HEAD
